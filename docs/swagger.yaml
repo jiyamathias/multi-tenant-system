@@ -1,0 +1,346 @@
+basePath: /api/v1
+definitions:
+  auth.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.signupRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    type: object
+  auth.updateUserRequest:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
+  model.GenericResponse:
+    properties:
+      code:
+        description: |-
+          The http response code
+
+          Required: true
+          Example: 200
+        type: integer
+      data:
+        description: |-
+          The http response data in cases where the request was processed successfully (optional)
+
+          Example: {"id": "uuid", "name": "john doe"}
+      error:
+        description: |-
+          The error message (optional)
+
+          Example: cannot process this request at this time (optional)
+        type: string
+      message:
+        description: |-
+          The success message (optional)
+
+          Example: User has been created successfully (optional)
+        type: string
+      page:
+        description: Page is the pagination info
+    type: object
+host: multi-tenant-api.onrender.com
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the API for the Multi-Tenant service
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Multi-Tenant API
+  version: "1.0"
+paths:
+  /auditLog/{id}:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint gets an audit log by ID
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: audit id
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: audit log fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getAuditLogByID
+      tags:
+      - audit-log
+  /auditLog/transaction/{id}:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint gets all audit logs by the transaction ID
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: transaction id
+        in: path
+        name: id
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: size
+        in: query
+        name: size
+        type: string
+      - description: sort_by
+        in: query
+        name: sort_by
+        type: string
+      - description: sort_direction_desc
+        in: query
+        name: sort_direction_desc
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: audit logs fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getAllAuditLogsByTransactionID
+      tags:
+      - audit-log
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint is used to log a user in
+      parameters:
+      - description: login request body
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/auth.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user logged in successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: login
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint signs up a new user
+      parameters:
+      - description: signup request body
+        in: body
+        name: signupRequest
+        required: true
+        schema:
+          $ref: '#/definitions/auth.signupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: signup successful
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: user signup
+      tags:
+      - auth
+  /auth/user:
+    patch:
+      consumes:
+      - application/json
+      description: this endpoint is used to update any of the users record
+      parameters:
+      - description: update user request body
+        in: body
+        name: updateUserRequest
+        required: true
+        schema:
+          $ref: '#/definitions/auth.updateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: user updated successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: updateUserByID
+      tags:
+      - auth
+  /auth/user/{id}:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint gets a user by ID
+      parameters:
+      - description: userID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: user details fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getUserByID
+      tags:
+      - auth
+  /transaction:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint is used to get all transactions belonging to a particular
+        user
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: size
+        in: query
+        name: size
+        type: string
+      - description: sort_by
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      - description: sort_direction_desc
+        in: query
+        name: sort_direction_desc
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: transactions fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getTransactionsByUserID
+      tags:
+      - transaction
+  /transaction/{id}:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint gets a transaction by it ID
+      parameters:
+      - description: transactionID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: transaction details fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getTransactionByID
+      tags:
+      - transaction
+  /transaction/flow:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint is used to get all transactions belonging to a particular
+        user based on the flow of transaction flow
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      - description: size
+        in: query
+        name: size
+        type: string
+      - description: sort_by
+        in: query
+        name: sort_by
+        required: true
+        type: string
+      - description: sort_direction_desc
+        in: query
+        name: sort_direction_desc
+        required: true
+        type: string
+      - description: flow
+        in: query
+        name: flow
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: transactions fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getAllTransactionsByFlow
+      tags:
+      - transaction
+  /wallet:
+    get:
+      consumes:
+      - application/json
+      description: this endpoint gets gets a users wallet balance
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: wallet balance fetched successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: getWalletByUserID
+      tags:
+      - wallet
+schemes:
+- https
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"
