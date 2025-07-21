@@ -64,12 +64,12 @@ definitions:
     type: object
   payment.bankTransferRequest:
     properties:
-      bankNumber:
+      bankName:
         type: string
       fullName:
         type: string
     required:
-    - bankNumber
+    - bankName
     - fullName
     type: object
   payment.depositRequest:
@@ -129,7 +129,7 @@ info:
   title: Multi-Tenant API
   version: "1.0"
 paths:
-  /auditLog/{id}:
+  /audit-log/{id}:
     get:
       consumes:
       - application/json
@@ -154,7 +154,7 @@ paths:
       summary: getAuditLogByID
       tags:
       - audit-log
-  /auditLog/transaction/{id}:
+  /audit-log/transaction/{id}:
     get:
       consumes:
       - application/json

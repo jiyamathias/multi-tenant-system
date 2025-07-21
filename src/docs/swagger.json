@@ -21,7 +21,7 @@
     "host": "localhost:5002",
     "basePath": "/api/v1",
     "paths": {
-        "/auditLog/transaction/{id}": {
+        "/audit-log/transaction/{id}": {
             "get": {
                 "description": "this endpoint gets all audit logs by the transaction ID",
                 "consumes": [
@@ -83,7 +83,7 @@
                 }
             }
         },
-        "/auditLog/{id}": {
+        "/audit-log/{id}": {
             "get": {
                 "description": "this endpoint gets an audit log by ID",
                 "consumes": [
@@ -748,11 +748,11 @@
         "payment.bankTransferRequest": {
             "type": "object",
             "required": [
-                "bankNumber",
+                "bankName",
                 "fullName"
             ],
             "properties": {
-                "bankNumber": {
+                "bankName": {
                     "type": "string"
                 },
                 "fullName": {
