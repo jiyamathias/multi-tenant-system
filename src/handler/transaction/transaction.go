@@ -33,7 +33,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 	tsGroup := r.Group("/transaction")
 	tsGroup.GET("/:id", ts.controller.Middleware().AuthMiddleware(), ts.getTransactionByID())
 	tsGroup.GET("", ts.controller.Middleware().AuthMiddleware(), ts.getTransactionsByUserID())
-	tsGroup.GET("/Flow", ts.controller.Middleware().AuthMiddleware(), ts.getAllTransactionsByFlow())
+	tsGroup.GET("/flow", ts.controller.Middleware().AuthMiddleware(), ts.getAllTransactionsByFlow())
 }
 
 // getTransactionByID 	godoc
@@ -129,6 +129,11 @@ func (ts *tsHandler) getAllTransactionsByFlow() gin.HandlerFunc {
 		if err != nil {
 			ts.logger.Error().Msgf("getAllTransactionsByFlow ::: %v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if flow != string(model.TransactionFlowRevenue) && flow != string(model.TransactionFlowWithdrawal) {
+			restModel.ErrorResponse(c, http.StatusBadRequest, "flow can either be: revenue or withdrawal")
 			return
 		}
 

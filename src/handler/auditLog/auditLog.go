@@ -29,11 +29,10 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 		controller:  c,
 		environment: env,
 	}
-	auditLogGroup := r.Group("/auditLog")
+	auditLogGroup := r.Group("/audit-log")
 
 	auditLogGroup.GET("/transaction/:id", auditLog.controller.Middleware().AuthMiddleware(), auditLog.getAllAuditLogsByTransactionID())
 	auditLogGroup.GET("/:id", auditLog.controller.Middleware().AuthMiddleware(), auditLog.getAuditLogByID())
-
 }
 
 // getAllAuditLogsByTransactionID 	godoc
@@ -50,7 +49,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 //	@Param			sort_by				query		string						false	"sort_by"
 //	@Param			sort_direction_desc	query		string						false	"sort_direction_desc"
 //	@Success		200					{object}	restModel.GenericResponse	"audit logs fetched successfully"
-//	@Router			/auditLog/transaction/{id} [get]
+//	@Router			/audit-log/transaction/{id} [get]
 func (a *auditLogHandler) getAllAuditLogsByTransactionID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		txID := c.Param("id")
@@ -81,7 +80,7 @@ func (a *auditLogHandler) getAllAuditLogsByTransactionID() gin.HandlerFunc {
 //	@Produce		json
 //	@Param			id	path		string						false	"audit id"
 //	@Success		200	{object}	restModel.GenericResponse	"audit log fetched successfully"
-//	@Router			/auditLog/{id} [get]
+//	@Router			/audit-log/{id} [get]
 func (a *auditLogHandler) getAuditLogByID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		auditLogID := c.Param("id")

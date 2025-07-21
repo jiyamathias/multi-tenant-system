@@ -68,6 +68,7 @@ func (w webhookHandler) processPayment() gin.HandlerFunc {
 
 		if err := w.controller.ProcessPaymentWebhook(context.Background(), request); err != nil {
 			w.logger.Error().Msgf("error performing update on transaction %v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
 

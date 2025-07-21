@@ -88,6 +88,7 @@ func New(z zerolog.Logger, s *storage.Storage, m *middleware.Middleware) *Operat
 
 	newRedis := redis.NewRedis(s.Env, z, s.Env.Get("REDIS_SERVER_ADDRESS"))
 
+	payment := payment.New(z, s.Env, s)
 	ctrl := &Controller{
 		logger:      l,
 		env:         s.Env,
@@ -100,7 +101,8 @@ func New(z zerolog.Logger, s *storage.Storage, m *middleware.Middleware) *Operat
 		transactionStorage: *transaction,
 		tenantStorage:      *tenant,
 
-		redis: *newRedis,
+		redis:          *newRedis,
+		paymentService: *payment,
 	}
 
 	op := Operations(ctrl)

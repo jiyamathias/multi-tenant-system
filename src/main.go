@@ -40,12 +40,11 @@ import (
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-//	@host						localhost:5002
-//	@BasePath					/api/v1
-//	@schemes					https
-//	@query.collection.format	multi
-//	@securityDefinitions.basic	BasicAuth
-
+// @host						localhost:5002
+// @BasePath					/api/v1
+// @schemes					https
+// @query.collection.format	multi
+// @securityDefinitions.basic	BasicAuth
 func main() {
 	// set global application timezone
 	_ = os.Setenv("TZ", "Africa/Lagos")
@@ -56,8 +55,8 @@ func main() {
 	corsConfig.AllowHeaders = []string{"*"}
 	corsConfig.AllowAllOrigins = true
 
-	// Limit to 5 requests per minutes
-	rate, _ := limiter.NewRateFromFormatted("5-M")
+	// Limit to 10 requests per minutes
+	rate, _ := limiter.NewRateFromFormatted("10-M")
 	store := memory.NewStore()
 	rateLimiterMiddleware := ginlimiter.NewMiddleware(limiter.New(store, rate))
 	r.Use(rateLimiterMiddleware)
