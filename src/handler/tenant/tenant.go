@@ -79,7 +79,7 @@ func (t *tenantHandler) createTenant() gin.HandlerFunc {
 //	@Param			size				query		string						false	"size"
 //	@Param			sort_by				query		string						false	"sort_by"
 //	@Param			sort_direction_desc	query		string						false	"sort_direction_desc"
-//	@Success		200	{object}	restModel.GenericResponse	"audit log fetched successfully"
+//	@Success		200					{object}	restModel.GenericResponse	"audit log fetched successfully"
 //	@Router			/tenant [get]
 func (t *tenantHandler) getAllUsersByTenantID() gin.HandlerFunc {
 	return func(c *gin.Context) {

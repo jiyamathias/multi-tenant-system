@@ -257,6 +257,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/tenant": {
+            "get": {
+                "description": "this endpoint gets all users under a tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "getAllUsersByTenantID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "size",
+                        "name": "size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort_by",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort_direction_desc",
+                        "name": "sort_direction_desc",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "audit log fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "this endpoint create a new tenent",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tenant"
+                ],
+                "summary": "createTenant",
+                "parameters": [
+                    {
+                        "description": "tenant request body",
+                        "name": "tenantRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tenant.tenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "tenant created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/transaction": {
             "get": {
                 "description": "this endpoint is used to get all transactions belonging to a particular user",
@@ -491,6 +579,25 @@ const docTemplate = `{
                 },
                 "page": {
                     "description": "Page is the pagination info"
+                }
+            }
+        },
+        "tenant.tenantRequest": {
+            "type": "object",
+            "required": [
+                "businessName",
+                "email",
+                "password"
+            ],
+            "properties": {
+                "businessName": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
                 }
             }
         }
