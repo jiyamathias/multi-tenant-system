@@ -21,16 +21,19 @@ func (m *Middleware) AuthMiddleware() gin.HandlerFunc {
 			restModel.ErrorResponse(c, http.StatusUnauthorized, "Bearer token is missing")
 			return
 		}
+
 		if !strings.HasPrefix(bearerToken, "Bearer ") {
 			restModel.ErrorResponse(c, http.StatusUnauthorized, "Token type must be bearer")
 			return
 		}
 
-		actorID, err := ParseToken(&m.env, strings.TrimPrefix(bearerToken, "Bearer "))
+		claims, err := ParseToken(&m.env, strings.TrimPrefix(bearerToken, "Bearer "))
 		if err != nil {
 			restModel.ErrorResponse(c, http.StatusBadRequest, "unable to parse token")
 			return
 		}
+		actorID := claims[claimsID].(string)
+		tenantID := claims[tenantID].(string)
 
 		var actorType model.ActorType
 		user := model.User{}
@@ -45,15 +48,15 @@ func (m *Middleware) AuthMiddleware() gin.HandlerFunc {
 
 		//validate the tenant
 		tenant := model.Tenant{}
-		db = m.storage.DB.WithContext(ctx).Where("id = ?", actorID).First(&tenant)
-		if db.Error != nil || strings.EqualFold(actorID, helper.ZeroUUID) {
+		db = m.storage.DB.WithContext(ctx).Where("id = ?", tenantID).First(&tenant)
+		if db.Error != nil || strings.EqualFold(tenantID, helper.ZeroUUID) {
 			restModel.ErrorResponse(c, http.StatusBadRequest, ErrInvalidTenant.Error())
 			return
 		}
 
 		actorID = user.ID.String()
 		actorType = model.ActorTypeUser
-		tenantID := user.TenantID.String()
+		tenantID = user.TenantID.String()
 
 		c.Set(ActorIDInContext, actorID)
 		c.Set(ActorTypeInContext, actorType)
@@ -118,12 +121,13 @@ func (m *Middleware) CheckAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		actorID, err := ParseToken(&m.env, strings.TrimPrefix(bearerToken, "Bearer "))
+		claims, err := ParseToken(&m.env, strings.TrimPrefix(bearerToken, "Bearer "))
 		if err != nil {
 			restModel.ErrorResponse(c, http.StatusBadRequest, "unable to parse token")
 			return
 		}
 
+		actorID = claims[claimsID].(string)
 		user := model.User{}
 		ctx := context.WithValue(c.Request.Context(), helper.GinContextKey, c)
 

@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -32,7 +33,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 
 	authGroup := r.Group("/auth")
 
-	authGroup.POST("/signup", auth.signup())
+	authGroup.POST("/signup", auth.controller.Middleware().TenantAuthMiddleware(), auth.signup())
 	authGroup.POST("/login", auth.login())
 	authGroup.GET("/user/:id", auth.controller.Middleware().AuthMiddleware(), auth.getUserByID())
 	authGroup.PATCH("/user", auth.controller.Middleware().AuthMiddleware(), auth.updateUserByID())
@@ -44,6 +45,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 //	@Summary		user signup
 //	@Description	this endpoint signs up a new user
 //	@Tags			auth
+//	@Param			Authorization	header	string	true	"Bearer <token>. Pass in the tenant access token"
 //	@Accept			json
 //	@Produce		json
 //	@Param			signupRequest	body		signupRequest				true	"signup request body"
@@ -65,7 +67,15 @@ func (a *authHandler) signup() gin.HandlerFunc {
 			return
 		}
 
-		newUser, err := a.controller.CreateUser(context.Background(), request.toUserModel())
+		tenantID, err := uuid.Parse(c.GetString(middleware.ActorIDInContext))
+		if err != nil {
+			a.logger.Err(err).Msgf("getWalletByUserID ::: error parsing uuid ==> %s", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+		fmt.Println("TenantID ===> ", tenantID)
+
+		newUser, err := a.controller.CreateUser(context.Background(), request.toUserModel(tenantID))
 		if err != nil {
 			a.logger.Error().Msgf("%v", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
@@ -151,6 +161,7 @@ func (a *authHandler) login() gin.HandlerFunc {
 //	@Summary		getUserByID
 //	@Description	this endpoint gets a user by ID
 //	@Tags			auth
+//	@Param			Authorization	header	string	true	"Bearer <token>"
 //	@Accept			json
 //	@Produce		json
 //	@Param			id	path		string						false	"userID"
@@ -188,6 +199,7 @@ func (a *authHandler) getUserByID() gin.HandlerFunc {
 //	@Summary		updateUserByID
 //	@Description	this endpoint is used to update any of the users record
 //	@Tags			auth
+//	@Param			Authorization	header	string	true	"Bearer <token>"
 //	@Accept			json
 //	@Produce		json
 //	@Param			updateUserRequest	body		updateUserRequest			true	"update user request body"

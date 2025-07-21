@@ -47,6 +47,11 @@ type Operations interface {
 
 	CreateTenant(ctx context.Context, tenant model.Tenant) (model.Tenant, error)
 	GetAllUsersByTenantID(ctx context.Context, tenantId uuid.UUID, page pagination.Page) ([]*model.User, pagination.PageInfo, error)
+	AuthenticateTenant(ctx context.Context, email, password string) (model.Tenant, error)
+
+	VirtualAccount(ctx context.Context, userID uuid.UUID, fullName, bankName string) (model.VirtualAccount, error)
+	Deposit(ctx context.Context, userID uuid.UUID, amount float64) error
+	Transfer(ctx context.Context, userID uuid.UUID, bankNumber, accountNumber string, amount float64) error
 }
 
 // Controller object to hold necessary reference to other dependencies

@@ -265,7 +265,7 @@ func (m *Middleware) ValidateRefreshTenantToken(z zerolog.Logger, c *gin.Context
 }
 
 // ParseToken parses the JWT token
-func ParseToken(env *environment.Env, tokenStr string) (string, error) {
+func ParseToken(env *environment.Env, tokenStr string) (jwtGo.MapClaims, error) {
 	token, err := jwtGo.Parse(tokenStr, func(token *jwtGo.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwtGo.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -274,11 +274,10 @@ func ParseToken(env *environment.Env, tokenStr string) (string, error) {
 	})
 
 	if claims, ok := token.Claims.(jwtGo.MapClaims); ok && token.Valid {
-		userID := claims[claimsID].(string)
-		return userID, nil
+		return claims, nil
 	}
 
-	return "", err
+	return nil, err
 }
 
 // TenantParseToken parses the JWT token

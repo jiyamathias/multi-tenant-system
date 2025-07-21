@@ -50,6 +50,20 @@ func (c *Controller) CreateUser(ctx context.Context, u model.User) (model.User, 
 		return model.User{}, err
 	}
 
+	auditLog := model.AuditLog{
+		ID:         uuid.New(),
+		TenantID:   &newUser.TenantID,
+		UserID:     &newUser.ID,
+		Actor:      model.ActorTenant,
+		ActionDone: model.ActionSuccess,
+		Messages:   "tenant added a new user",
+	}
+
+	if _, err = c.CreateAuditLog(ctx, auditLog); err != nil {
+		c.logger.Err(err).Msgf("error creating audit log")
+		return model.User{}, err
+	}
+
 	return newUser, nil
 }
 
@@ -75,10 +89,18 @@ func (c *Controller) AuthenticateUser(ctx context.Context, email, password strin
 	if ok := user.Password.Check(model.Password(password)); !ok {
 		return model.User{}, ErrIncorrectLoginDetails
 	}
-	// update last logged in time
-	err = c.userStorage.UpdateLastLoggedIn(ctx, email, time.Now())
-	if err != nil {
-		c.logger.Err(err).Msgf("AuthenticateUser::: Unable to update last logged in %s", err)
+
+	auditLog := model.AuditLog{
+		ID:         uuid.New(),
+		TenantID:   &user.TenantID,
+		UserID:     &user.ID,
+		Actor:      model.ActorUser,
+		ActionDone: model.ActionSuccess,
+		Messages:   "user logged in",
+	}
+
+	if _, err = c.CreateAuditLog(ctx, auditLog); err != nil {
+		c.logger.Err(err).Msgf("error creating audit log")
 		return model.User{}, err
 	}
 

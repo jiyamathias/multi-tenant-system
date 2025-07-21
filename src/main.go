@@ -16,6 +16,9 @@ import (
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+	"github.com/ulule/limiter/v3"
+	ginlimiter "github.com/ulule/limiter/v3/drivers/middleware/gin"
+	memory "github.com/ulule/limiter/v3/drivers/store/memory"
 
 	"codematic/controller"
 	"codematic/handler"
@@ -37,7 +40,7 @@ import (
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-//	@host						multi-tenant-api.onrender.com
+//	@host						localhost:5002
 //	@BasePath					/api/v1
 //	@schemes					https
 //	@query.collection.format	multi
@@ -52,6 +55,13 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowHeaders = []string{"*"}
 	corsConfig.AllowAllOrigins = true
+
+	// Limit to 5 requests per minutes
+	rate, _ := limiter.NewRateFromFormatted("5-M")
+	store := memory.NewStore()
+	rateLimiterMiddleware := ginlimiter.NewMiddleware(limiter.New(store, rate))
+	r.Use(rateLimiterMiddleware)
+
 	r.Use(cors.New(corsConfig), gin.Recovery())
 	r.Use(ginzerolog.Logger("rest"))
 	r.Use(GinContextToContextMiddleware())

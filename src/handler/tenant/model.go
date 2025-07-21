@@ -12,6 +12,19 @@ type (
 		Email        string `json:"email" validate:"required"`
 		Password     string `json:"password" validate:"required"`
 	}
+
+	loginRequest struct {
+		Email    string `json:"email" validate:"required,email"`
+		Password string `json:"password" validate:"required"`
+	}
+
+	loginResponse struct {
+		User               model.Tenant `json:"user"`
+		AccessToken        string       `json:"accessToken"`
+		AccessTokenExpiry  string       `json:"accessTokenExpiry"`
+		RefreshToken       string       `json:"refreshToken"`
+		RefreshTokenExpiry string       `json:"refreshTokenExpiry"`
+	}
 )
 
 func (t *tenantRequest) toModel() model.Tenant {

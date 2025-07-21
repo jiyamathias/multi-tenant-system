@@ -35,10 +35,11 @@ type (
 	}
 )
 
-func (s *signupRequest) toUserModel() model.User {
+func (s *signupRequest) toUserModel(tenantId uuid.UUID) model.User {
 	password := model.Password(s.Password)
 
 	u := model.User{
+		TenantID:  tenantId,
 		Email:     s.Email,
 		Password:  password,
 		FirstName: s.FirstName,

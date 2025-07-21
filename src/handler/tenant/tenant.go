@@ -29,10 +29,11 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 		controller:  c,
 		environment: env,
 	}
-	auditLogGroup := r.Group("/tenant")
+	tenantGroup := r.Group("/tenant")
 
-	auditLogGroup.POST("", tenant.createTenant())
-	auditLogGroup.GET("", tenant.controller.Middleware().TenantAuthMiddleware(), tenant.getAllUsersByTenantID())
+	tenantGroup.POST("", tenant.createTenant())
+	tenantGroup.POST("/login", tenant.login())
+	tenantGroup.GET("", tenant.controller.Middleware().TenantAuthMiddleware(), tenant.getAllUsersByTenantID())
 
 }
 
@@ -56,6 +57,13 @@ func (t *tenantHandler) createTenant() gin.HandlerFunc {
 			return
 		}
 
+		err := restModel.ValidateRequest(request)
+		if err != nil {
+			t.logger.Error().Msgf("%v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, restModel.ErrIncompleteDetails.Error())
+			return
+		}
+
 		tenant, err := t.controller.CreateTenant(context.Background(), request.toModel())
 		if err != nil {
 			t.logger.Error().Msgf("CreateTenant ::: %v", err)
@@ -64,6 +72,60 @@ func (t *tenantHandler) createTenant() gin.HandlerFunc {
 		}
 
 		restModel.OkResponse(c, http.StatusCreated, "tenant created successfully", tenant)
+	}
+}
+
+// login 	godoc
+//
+//	@Summary		login
+//	@Description	this endpoint is used to log a user in
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			loginRequest	body		loginRequest				true	"login request body"
+//	@Success		200				{object}	restModel.GenericResponse	"tenant logged in successfully"
+//	@Router			/tenant/login [post]
+func (t *tenantHandler) login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req loginRequest
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			t.logger.Error().Msgf("%v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		err := restModel.ValidateRequest(req)
+		if err != nil {
+			t.logger.Error().Msgf("%v", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, restModel.ErrIncompleteLoginDetails.Error())
+			return
+		}
+
+		tenant, err := t.controller.AuthenticateTenant(context.Background(), req.Email, req.Password)
+		if err != nil {
+			t.logger.Error().Msgf("%v", err)
+			restModel.ErrorResponse(c, http.StatusUnauthorized, err.Error())
+			return
+		}
+
+		// create token
+		tokenDetails, err := t.controller.Middleware().CreateTenantToken(c, t.environment, &tenant)
+		if err != nil {
+			t.logger.Err(err).Msgf("Login ::: Unable to generate token ==> %s", err)
+			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		response := loginResponse{
+			User:               tenant,
+			AccessToken:        tokenDetails.AccessToken,
+			AccessTokenExpiry:  tokenDetails.AccessTokenExpiry,
+			RefreshToken:       tokenDetails.RefreshToken,
+			RefreshTokenExpiry: tokenDetails.RefreshTokenExpiry,
+		}
+
+		restModel.OkResponse(c, http.StatusOK, "tenant logged in successfully", response)
 	}
 }
 
@@ -85,14 +147,14 @@ func (t *tenantHandler) getAllUsersByTenantID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tenantID, err := uuid.Parse(c.GetString(middleware.ActorIDInContext))
 		if err != nil {
-			t.logger.Err(err).Msgf("getWalletByUserID ::: error parsing uuid ==> %s", err)
+			t.logger.Err(err).Msgf("getAllUsersByTenantID ::: error parsing uuid ==> %s", err)
 			restModel.ErrorResponse(c, http.StatusBadRequest, err.Error())
 			return
 		}
 
 		users, pagination, err := t.controller.GetAllUsersByTenantID(context.Background(), tenantID, helper.ParsePageParams(c))
 		if err != nil {
-			t.logger.Error().Msgf("getAuditLogByID ::: %v", err)
+			t.logger.Error().Msgf("getAllUsersByTenantID ::: %v", err)
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
 		}
