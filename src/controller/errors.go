@@ -17,4 +17,6 @@ var (
 	ErrWithToken = errors.New("error occurred with reset token")
 	// ErrTransactionID when theres an error getting transaction with ID
 	ErrTransactionID = errors.New("error getting transaction with ID")
+	// MismatchedTransactionType when the transaction type from the webhook and that in the transaction model mismatch
+	MismatchedTransactionType = errors.New("mismatch transaction type")
 )

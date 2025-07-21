@@ -12,7 +12,7 @@ type (
 	}
 
 	bankTransferRequest struct {
-		FulName    string `json:"fullName" validate:"required"`
-		BankNumber string `json:"bankNumber" validate:"required"`
+		FulName  string `json:"fullName" validate:"required"`
+		BankName string `json:"bankName" validate:"required"`
 	}
 )

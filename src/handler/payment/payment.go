@@ -157,7 +157,7 @@ func (p *paymentHandler) bankTransfer() gin.HandlerFunc {
 			return
 		}
 
-		virtualAccount, err := p.controller.VirtualAccount(context.Background(), userID, request.FulName, request.BankNumber)
+		virtualAccount, err := p.controller.VirtualAccount(context.Background(), userID, request.FulName, request.BankName)
 		if err != nil {
 			p.logger.Error().Msgf("bankTransfer ::: %v", err)
 			restModel.ErrorResponse(c, http.StatusInternalServerError, err.Error())

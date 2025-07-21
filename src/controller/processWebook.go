@@ -20,6 +20,14 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		return ErrTransactionID
 	}
 
+	// make sure that the prefix on the reference and the tranaction type is the same before
+	// make credits to the wallets just to avoid getting wallets credited just because the webhook reference has the prefix
+	// crt meanwhile the transaction type is debit
+
+	if txID[0] == "crt" && tx.TransactionType == model.DebitTransaction || txID[0] == "dbt" && tx.TransactionType == model.CreditTransaction {
+		return MismatchedTransactionType
+	}
+
 	user, err := c.GetUserByID(ctx, tx.UserID)
 	if err != nil {
 		c.logger.Err(err).Msgf("GetUserByID ===> error getting user by ID %v", err)
@@ -27,7 +35,7 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 	}
 
 	// TODO save the ID into redis to avoid updating the transaction matching ID several times
-	setStatus, err := c.GetStringValue(ctx, fmt.Sprintf("wbk_%s_%s", txID[0], tx.ID.String()))
+	setStatus, err := c.GetStringValue(ctx, fmt.Sprintf("%s_%s", txID[0], tx.ID.String()))
 	if err != nil {
 		if err == redis.Nil {
 			setStatus = ""
@@ -41,7 +49,8 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		return nil
 	}
 
-	tx.MetaData = &payload.Data.Metadata
+	// tx.MetaData = &payload.Data.Metadata
+	tx.SetMetaData(payload.Data.Metadata)
 	tx.Charges = payload.Data.Fees
 	tx.Amount = payload.Data.Amount
 	tx.Currency = payload.Data.Currency
@@ -69,6 +78,7 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		// if the transaction type is withdrawal
 		if txID[0] == "dbt" {
 			balance.TransactionType = model.DebitTransaction
+			balance.BalanceBefore = previousBal.BalanceBefore - payload.Data.Amount
 			balance.BalanceAfter = previousBal.BalanceAfter - payload.Data.Amount
 		}
 
@@ -98,6 +108,7 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		if txID[0] == "dbt" {
 			txType = model.DebitTransaction
 			wallet.TransactionType = &txType
+			wallet.BalanceBefore = previousBal.BalanceBefore - payload.Data.Amount
 			wallet.BalanceAfter = previousBal.BalanceAfter - payload.Data.Amount
 		}
 
@@ -128,7 +139,7 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 
 		// save that key to redis for 7 days, it is safe to assume that webhooks would not keep on being sent for 7 straight days :D.
 		// And as such, safely delete the key + value after 7 days
-		if err := c.SetValue(ctx, fmt.Sprintf("wbk_%s_%s", txID[0], tx.ID.String()), model.TransactionStatusSuccessful, 7*24*time.Hour); err != nil {
+		if err := c.SetValue(ctx, fmt.Sprintf("%s_%s", txID[0], tx.ID.String()), string(model.TransactionStatusSuccessful), 7*24*time.Hour); err != nil {
 			return err
 		}
 	case "failed":

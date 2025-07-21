@@ -97,7 +97,7 @@ func (tx *Transaction) GetTransactionsByUserID(ctx context.Context, userID uuid.
 func (tx *Transaction) GetTransactionByID(ctx context.Context, transactionID uuid.UUID) (model.Transaction, error) {
 	var transaction model.Transaction
 
-	db := tx.storage.DB.WithContext(ctx).Where("transaction_id = ?", transactionID).First(&transaction)
+	db := tx.storage.DB.WithContext(ctx).Where("id = ?", transactionID).First(&transaction)
 	if db.Error != nil {
 		tx.logger.Err(db.Error).Msgf("TransactionService:: Error fetching transaction by ID %v: %v", transactionID, db.Error)
 		return model.Transaction{}, ErrRecordNotFound

@@ -62,8 +62,8 @@ func New(z zerolog.Logger, ev *environment.Env, s *storage.Storage) *PaymentServ
 	flutterwave := NewFlutterwaveProvider(ev.Get("FLUTTERWAVE_API_KEY"))
 
 	providers := map[model.PaymentProvider]PaymentProvider{
-		"paystack":    paystack,
-		"flutterwave": flutterwave,
+		model.PaymentProviderPaystack:    paystack,
+		model.PaymentProviderFlutterwave: flutterwave,
 	}
 
 	return &PaymentService{

@@ -1,9 +1,11 @@
 package model
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/gorm/dialects/postgres"
 	"gorm.io/gorm"
 )
 
@@ -32,6 +34,7 @@ const (
 )
 
 type (
+	MetaData map[string]interface{}
 	// TransactionType credit or debit transaction
 	TransactionType string
 
@@ -48,7 +51,7 @@ type (
 		User            *User             `gorm:"foreignKey:UserID;references:ID"`
 		Amount          float64           `gorm:"not null" json:"amount" validate:"required"`
 		Charges         float64           `json:"charges"`
-		MetaData        *map[string]any   `gorm:"type:jsonb" json:"meta_data"`
+		MetaData        *postgres.Jsonb   `gorm:"type:jsonb" json:"meta_data"`
 		Currency        string            `json:"currency"`
 		TransactionType TransactionType   `gorm:"type:varchar(50);not null" json:"transaction_type"`
 		Status          TransactionStatus `gorm:"type:varchar(50);not null" json:"status"`
@@ -58,3 +61,26 @@ type (
 		DeletedAt       gorm.DeletedAt    `gorm:"index" json:"-"`
 	}
 )
+
+// GetMetaData gets the metadata
+func (t *Transaction) GetMetaData() (MetaData, error) {
+	var md MetaData
+	bytes, err := t.MetaData.MarshalJSON()
+	if err != nil {
+		return md, err
+	}
+
+	err = json.Unmarshal(bytes, &md)
+	return md, err
+}
+
+// SetMetaData sets the metadata
+func (t *Transaction) SetMetaData(md MetaData) error {
+	d, err := json.Marshal(md)
+	if err != nil {
+		return err
+	}
+
+	t.MetaData = &postgres.Jsonb{RawMessage: d}
+	return nil
+}
