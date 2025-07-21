@@ -173,6 +173,13 @@ const docTemplate = `{
                 "summary": "user signup",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e. Pass in the tenant access token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "signup request body",
                         "name": "signupRequest",
                         "in": "body",
@@ -206,6 +213,13 @@ const docTemplate = `{
                 ],
                 "summary": "updateUserByID",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "description": "update user request body",
                         "name": "updateUserRequest",
@@ -242,6 +256,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
                         "description": "userID",
                         "name": "id",
                         "in": "path"
@@ -250,6 +271,108 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "user details fetched successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment/bank-transfer": {
+            "post": {
+                "description": "this endpoint is used to get a one time virtual account that is to be used top up once wallet",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment"
+                ],
+                "summary": "bankTransfer",
+                "parameters": [
+                    {
+                        "description": "bank transfer request body",
+                        "name": "bankTransferRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/payment.bankTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "bank account created successful",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment/deposit": {
+            "post": {
+                "description": "this endpoint is used to make a deposit",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment"
+                ],
+                "summary": "makeDeposit",
+                "parameters": [
+                    {
+                        "description": "deposit request body",
+                        "name": "depositRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/payment.depositRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "wallet top up successful",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/payment/transfer": {
+            "post": {
+                "description": "this endpoint is used to make transfer",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "payment"
+                ],
+                "summary": "makeTransfer",
+                "parameters": [
+                    {
+                        "description": "make transfer request body",
+                        "name": "makeTransferRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/payment.makeTransferRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "transfer successful",
                         "schema": {
                             "$ref": "#/definitions/model.GenericResponse"
                         }
@@ -338,6 +461,40 @@ const docTemplate = `{
                 "responses": {
                     "201": {
                         "description": "tenant created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/model.GenericResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tenant/login": {
+            "post": {
+                "description": "this endpoint is used to log a user in",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "login",
+                "parameters": [
+                    {
+                        "description": "login request body",
+                        "name": "loginRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/tenant.loginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "tenant logged in successfully",
                         "schema": {
                             "$ref": "#/definitions/model.GenericResponse"
                         }
@@ -498,6 +655,15 @@ const docTemplate = `{
                     "wallet"
                 ],
                 "summary": "getWalletByUserID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer \u003ctoken\u003e",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "wallet balance fetched successfully",
@@ -582,6 +748,66 @@ const docTemplate = `{
                 }
             }
         },
+        "payment.bankTransferRequest": {
+            "type": "object",
+            "required": [
+                "bankNumber",
+                "fullName"
+            ],
+            "properties": {
+                "bankNumber": {
+                    "type": "string"
+                },
+                "fullName": {
+                    "type": "string"
+                }
+            }
+        },
+        "payment.depositRequest": {
+            "type": "object",
+            "required": [
+                "amount"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                }
+            }
+        },
+        "payment.makeTransferRequest": {
+            "type": "object",
+            "required": [
+                "accountNumber",
+                "amount",
+                "bankNumber"
+            ],
+            "properties": {
+                "accountNumber": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "bankNumber": {
+                    "type": "string"
+                }
+            }
+        },
+        "tenant.loginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "tenant.tenantRequest": {
             "type": "object",
             "required": [
@@ -612,7 +838,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "multi-tenant-api.onrender.com",
+	Host:             "localhost:5002",
 	BasePath:         "/api/v1",
 	Schemes:          []string{"https"},
 	Title:            "Multi-Tenant API",

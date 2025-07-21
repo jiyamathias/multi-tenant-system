@@ -30,7 +30,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 
 	walletGroup := r.Group("/wallet")
 
-	walletGroup.POST("", wallet.controller.Middleware().AuthMiddleware(), wallet.getWalletByUserID())
+	walletGroup.GET("", wallet.controller.Middleware().AuthMiddleware(), wallet.getWalletByUserID())
 }
 
 // getWalletByUserID 	godoc
@@ -38,6 +38,7 @@ func New(r *gin.RouterGroup, l zerolog.Logger, c controller.Operations, env *env
 //	@Summary		getWalletByUserID
 //	@Description	this endpoint gets gets a users wallet balance
 //	@Tags			wallet
+//	@Param			Authorization	header	string	true	"Bearer <token>"
 //	@Accept			json
 //	@Produce		json
 //	@Success		200	{object}	restModel.GenericResponse	"wallet balance fetched successfully"

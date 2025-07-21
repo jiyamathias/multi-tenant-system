@@ -42,6 +42,13 @@ func (w webhookHandler) processPayment() gin.HandlerFunc {
 			return
 		}
 
+		// set a dunny authentication to prevent webhook from updating records if it is not coming from the set payment gateway
+		paymentAuth := c.GetHeader("auth")
+		if paymentAuth != "payment" {
+			restModel.ErrorResponse(c, http.StatusBadRequest, "this webhook is not from our payment gateway")
+			return
+		}
+
 		// add some validation since we are simulation the webhook just to ensure everything works as it should.
 		if !strings.Contains(request.Data.Reference, "_") {
 			restModel.ErrorResponse(c, http.StatusBadRequest, "the reference must contain an underscore")

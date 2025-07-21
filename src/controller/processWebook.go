@@ -20,6 +20,12 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		return ErrTransactionID
 	}
 
+	user, err := c.GetUserByID(ctx, tx.UserID)
+	if err != nil {
+		c.logger.Err(err).Msgf("GetUserByID ===> error getting user by ID %v", err)
+		return err
+	}
+
 	// TODO save the ID into redis to avoid updating the transaction matching ID several times
 	setStatus, err := c.GetStringValue(ctx, fmt.Sprintf("wbk_%s_%s", txID[0], tx.ID.String()))
 	if err != nil {
@@ -100,6 +106,26 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 			return err
 		}
 
+		// create a audit log
+		auditLog := model.AuditLog{
+			ID:            uuid.New(),
+			TransactionID: &tx.ID,
+			UserID:        &tx.UserID,
+			TenantID:      &user.TenantID,
+			Actor:         model.ActorUser,
+			ActionDone:    model.ActionSuccess,
+			Messages:      "reveived a credit to wallet",
+		}
+
+		if txID[0] == "dbt" {
+			auditLog.Messages = "reveived a debit to wallet"
+		}
+
+		if _, err = c.CreateAuditLog(ctx, auditLog); err != nil {
+			c.logger.Err(err).Msgf("error creating audit log")
+			return err
+		}
+
 		// save that key to redis for 7 days, it is safe to assume that webhooks would not keep on being sent for 7 straight days :D.
 		// And as such, safely delete the key + value after 7 days
 		if err := c.SetValue(ctx, fmt.Sprintf("wbk_%s_%s", txID[0], tx.ID.String()), model.TransactionStatusSuccessful, 7*24*time.Hour); err != nil {
@@ -107,8 +133,40 @@ func (c *Controller) ProcessPaymentWebhook(ctx context.Context, payload model.Pa
 		}
 	case "failed":
 		tx.Status = model.TransactionStatusFailed
+
+		// create a audit log
+		auditLog := model.AuditLog{
+			ID:            uuid.New(),
+			TransactionID: &tx.ID,
+			UserID:        &tx.UserID,
+			TenantID:      &user.TenantID,
+			Actor:         model.ActorUser,
+			ActionDone:    model.ActionFailed,
+			Messages:      "transaction failed",
+		}
+
+		if _, err = c.CreateAuditLog(ctx, auditLog); err != nil {
+			c.logger.Err(err).Msgf("error creating audit log")
+			return err
+		}
 	case "pending":
 		tx.Status = model.TransactionStatusPending
+
+		// create a audit log
+		auditLog := model.AuditLog{
+			ID:            uuid.New(),
+			TransactionID: &tx.ID,
+			UserID:        &tx.UserID,
+			TenantID:      &user.TenantID,
+			Actor:         model.ActorUser,
+			ActionDone:    model.ActionPending,
+			Messages:      "transaction pending",
+		}
+
+		if _, err = c.CreateAuditLog(ctx, auditLog); err != nil {
+			c.logger.Err(err).Msgf("error creating audit log")
+			return err
+		}
 	}
 
 	if err := c.UpdateTransactionByID(ctx, tx); err != nil {

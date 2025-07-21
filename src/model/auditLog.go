@@ -17,7 +17,9 @@ type (
 	// AuditLog schema
 	AuditLog struct {
 		ID            uuid.UUID      `gorm:"primaryKey;type:uuid;default:gen_random_uuid()" json:"id"`
-		TransactionID uuid.UUID      `gorm:"type:uuid;not null" json:"transaction_id"`
+		TenantID      *uuid.UUID     `json:"tenantId"`
+		UserID        *uuid.UUID     `json:"userId"`
+		TransactionID *uuid.UUID     `json:"transaction_id"`
 		ActionDone    AuditLogAction `gorm:"type:varchar(50);not null" json:"action_done"`
 		Actor         Actor          `gorm:"type:varchar(100);not null" json:"actor"`
 		Messages      string         `gorm:"type:text" json:"messages"`
@@ -35,10 +37,10 @@ const (
 
 	// ActionCreated is the action when the transaction is created
 	ActionCreated AuditLogAction = "created"
-	// ActionUpdated is the action when the transaction is updated
-	ActionUpdated AuditLogAction = "updated"
-	// ActionPaid is the action when the transaction is paid for
-	ActionPaid AuditLogAction = "paid"
+	// ActionSuccess is the action when the transaction is successful
+	ActionSuccess AuditLogAction = "success"
+	// ActionPending is the action when the transaction is pending
+	ActionPending AuditLogAction = "pending"
 	//  ActionFailed is the action when the transaction is failed after payment
 	ActionFailed AuditLogAction = "failed"
 	// ActionInDispute is the action when the transaction is being disputed

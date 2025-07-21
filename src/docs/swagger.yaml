@@ -62,6 +62,46 @@ definitions:
       page:
         description: Page is the pagination info
     type: object
+  payment.bankTransferRequest:
+    properties:
+      bankNumber:
+        type: string
+      fullName:
+        type: string
+    required:
+    - bankNumber
+    - fullName
+    type: object
+  payment.depositRequest:
+    properties:
+      amount:
+        type: number
+    required:
+    - amount
+    type: object
+  payment.makeTransferRequest:
+    properties:
+      accountNumber:
+        type: string
+      amount:
+        type: number
+      bankNumber:
+        type: string
+    required:
+    - accountNumber
+    - amount
+    - bankNumber
+    type: object
+  tenant.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
   tenant.tenantRequest:
     properties:
       businessName:
@@ -75,7 +115,7 @@ definitions:
     - email
     - password
     type: object
-host: multi-tenant-api.onrender.com
+host: localhost:5002
 info:
   contact:
     email: support@swagger.io
@@ -183,6 +223,11 @@ paths:
       - application/json
       description: this endpoint signs up a new user
       parameters:
+      - description: Bearer <token>. Pass in the tenant access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: signup request body
         in: body
         name: signupRequest
@@ -205,6 +250,11 @@ paths:
       - application/json
       description: this endpoint is used to update any of the users record
       parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: update user request body
         in: body
         name: updateUserRequest
@@ -227,6 +277,11 @@ paths:
       - application/json
       description: this endpoint gets a user by ID
       parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: userID
         in: path
         name: id
@@ -241,6 +296,73 @@ paths:
       summary: getUserByID
       tags:
       - auth
+  /payment/bank-transfer:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint is used to get a one time virtual account that is
+        to be used top up once wallet
+      parameters:
+      - description: bank transfer request body
+        in: body
+        name: bankTransferRequest
+        required: true
+        schema:
+          $ref: '#/definitions/payment.bankTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: bank account created successful
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: bankTransfer
+      tags:
+      - payment
+  /payment/deposit:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint is used to make a deposit
+      parameters:
+      - description: deposit request body
+        in: body
+        name: depositRequest
+        required: true
+        schema:
+          $ref: '#/definitions/payment.depositRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: wallet top up successful
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: makeDeposit
+      tags:
+      - payment
+  /payment/transfer:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint is used to make transfer
+      parameters:
+      - description: make transfer request body
+        in: body
+        name: makeTransferRequest
+        required: true
+        schema:
+          $ref: '#/definitions/payment.makeTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: transfer successful
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: makeTransfer
+      tags:
+      - payment
   /tenant:
     get:
       consumes:
@@ -299,6 +421,28 @@ paths:
       summary: createTenant
       tags:
       - tenant
+  /tenant/login:
+    post:
+      consumes:
+      - application/json
+      description: this endpoint is used to log a user in
+      parameters:
+      - description: login request body
+        in: body
+        name: loginRequest
+        required: true
+        schema:
+          $ref: '#/definitions/tenant.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: tenant logged in successfully
+          schema:
+            $ref: '#/definitions/model.GenericResponse'
+      summary: login
+      tags:
+      - auth
   /transaction:
     get:
       consumes:
@@ -399,6 +543,12 @@ paths:
       consumes:
       - application/json
       description: this endpoint gets gets a users wallet balance
+      parameters:
+      - description: Bearer <token>
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
