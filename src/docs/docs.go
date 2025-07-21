@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auditLog/transaction/{id}": {
+        "/audit-log/transaction/{id}": {
             "get": {
                 "description": "this endpoint gets all audit logs by the transaction ID",
                 "consumes": [
@@ -86,7 +86,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/auditLog/{id}": {
+        "/audit-log/{id}": {
             "get": {
                 "description": "this endpoint gets an audit log by ID",
                 "consumes": [
@@ -751,11 +751,11 @@ const docTemplate = `{
         "payment.bankTransferRequest": {
             "type": "object",
             "required": [
-                "bankNumber",
+                "bankName",
                 "fullName"
             ],
             "properties": {
-                "bankNumber": {
+                "bankName": {
                     "type": "string"
                 },
                 "fullName": {
