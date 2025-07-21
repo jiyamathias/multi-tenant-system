@@ -4,6 +4,7 @@ package webhook
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -38,6 +39,18 @@ func (w webhookHandler) processPayment() gin.HandlerFunc {
 
 		if err := c.ShouldBindJSON(&request); err != nil {
 			w.logger.Error().Msgf("%v", err)
+			return
+		}
+
+		// add some validation since we are simulation the webhook just to ensure everything works as it should.
+		if !strings.Contains(request.Data.Reference, "_") {
+			restModel.ErrorResponse(c, http.StatusBadRequest, "the reference must contain an underscore")
+			return
+		}
+
+		txID := strings.Split(request.Data.Reference, "_")
+		if txID[0] != "dbt" && txID[0] != "crt" {
+			restModel.ErrorResponse(c, http.StatusBadRequest, "the reference format is dbt... or crt...")
 			return
 		}
 

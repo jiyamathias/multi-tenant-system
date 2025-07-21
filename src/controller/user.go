@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 
 	"codematic/model"
+	"codematic/model/pagination"
+	"codematic/pkg/helper"
 )
 
 // CreateUser creates a new user in the database
@@ -16,6 +18,11 @@ func (c *Controller) CreateUser(ctx context.Context, u model.User) (model.User, 
 
 	encryptedPass := u.Password.Encrypt()
 	u.Password = encryptedPass
+
+	// validate if the tenantID was passed in
+	if u.TenantID == uuid.Nil {
+		return model.User{}, helper.ErrTenantIDMissing
+	}
 
 	_, err := c.userStorage.GetUserByEmail(ctx, u.Email)
 	if err == nil {
@@ -26,6 +33,20 @@ func (c *Controller) CreateUser(ctx context.Context, u model.User) (model.User, 
 	newUser, err := c.userStorage.CreateUser(ctx, u)
 	if err != nil {
 		c.logger.Err(err).Msgf("CreateUser::: Unable to insert user into db %s", err)
+		return model.User{}, err
+	}
+
+	// create a wallet for every newly created users
+	wallet := model.Wallet{
+		ID:            uuid.New(),
+		UserID:        newUser.ID,
+		BalanceBefore: 0.0,
+		BalanceAfter:  0.0,
+	}
+
+	_, err = c.CreateWallet(ctx, wallet)
+	if err != nil {
+		c.logger.Err(err).Msgf("CreateWallet::: Unable to create wallet %s", err)
 		return model.User{}, err
 	}
 
@@ -95,4 +116,9 @@ func (c *Controller) UpdateUserByID(ctx context.Context, userID uuid.UUID, u mod
 	}
 
 	return user, nil
+}
+
+// GetAllUsersByTenantID gets all users signed up under a particular tenant
+func (c *Controller) GetAllUsersByTenantID(ctx context.Context, tenantId uuid.UUID, page pagination.Page) ([]*model.User, pagination.PageInfo, error) {
+	return c.userStorage.GetAllUsersByTenantID(ctx, tenantId, page)
 }

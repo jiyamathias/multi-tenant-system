@@ -9,6 +9,7 @@ import (
 	auditLog "codematic/handler/auditLog"
 	"codematic/handler/auth"
 	"codematic/handler/docs"
+	"codematic/handler/tenant"
 	"codematic/handler/transaction"
 	"codematic/handler/wallet"
 	"codematic/handler/webhook"
@@ -45,5 +46,6 @@ func (h *Handler) Build() {
 	transaction.New(v1, *h.logger, h.application, h.env)
 	webhook.New(v1, *h.logger, h.application, h.env)
 	wallet.New(v1, *h.logger, h.application, h.env)
+	tenant.New(v1, *h.logger, h.application, h.env)
 	docs.New(v1)
 }

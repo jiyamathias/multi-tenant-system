@@ -65,6 +65,11 @@ func main() {
 
 	storage := codematicStorage.New(logger, env)
 	defer storage.Close()
+	// run automigration
+	if err := storage.AutoMigrate(); err != nil {
+		applicationLogger.Fatal().Err(err)
+		panic(err) // panic - this service should not start up either
+	}
 
 	// initialize the app
 	r.Use(GinContextToContextMiddleware())

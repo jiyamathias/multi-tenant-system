@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"codematic/model"
+	"codematic/model/pagination"
 	"codematic/pkg/helper"
 )
 
@@ -21,6 +23,8 @@ type UserDatabase interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (model.User, error)
 	GetUserByEmail(ctx context.Context, email string) (model.User, error)
 	UpdateLastLoggedIn(ctx context.Context, email string, when time.Time) error
+
+	GetAllUsersByTenantID(ctx context.Context, tenantId uuid.UUID, page pagination.Page) ([]*model.User, pagination.PageInfo, error)
 }
 
 // User object
@@ -102,4 +106,59 @@ func (u *User) UpdateLastLoggedIn(ctx context.Context, email string, when time.T
 	}
 
 	return nil
+}
+
+// GetAllUsersByTenantID gets all users signed up under a particular tenant
+func (u *User) GetAllUsersByTenantID(ctx context.Context, tenantId uuid.UUID, page pagination.Page) ([]*model.User, pagination.PageInfo, error) {
+	var users []*model.User
+
+	offset := 0
+	// load defaults
+	if page.Number == nil {
+		tmpPageNumber := pagination.PageDefaultNumber
+		page.Number = &tmpPageNumber
+	}
+	if page.Size == nil {
+		tmpPageSize := pagination.PageDefaultSize
+		page.Size = &tmpPageSize
+	}
+	if page.SortBy == nil {
+		tmpPageSortBy := pagination.PageDefaultSortBy
+		page.SortBy = &tmpPageSortBy
+	}
+
+	if page.SortDirectionDesc == nil {
+		tmpPageSortDirectionDesc := pagination.PageDefaultSortDirectionDesc
+		page.SortDirectionDesc = &tmpPageSortDirectionDesc
+	}
+
+	if *page.Number > 1 {
+		offset = *page.Size * (*page.Number - 1)
+	}
+	sortDirection := pagination.PageSortDirectionDescending
+	if !*page.SortDirectionDesc {
+		sortDirection = pagination.PageSortDirectionAscending
+	}
+
+	queryDraft := u.storage.DB.WithContext(ctx).Where("tenant_id = ?", tenantId)
+
+	var count int64
+	queryDraft.Model(model.User{}).Count(&count)
+
+	db := queryDraft.Debug().Offset(offset).Limit(*page.Size).
+		Order(fmt.Sprintf("%s %s", *page.SortBy, sortDirection)).
+		Find(&users)
+
+	if db.Error != nil {
+		u.logger.Err(db.Error).Msgf("GetAllUsersByTenantID:: error: %v, (%v)", ErrEmptyResult, db.Error)
+		return nil, pagination.PageInfo{}, ErrEmptyResult
+	}
+
+	return users, pagination.PageInfo{
+		Page:            *page.Number,
+		Size:            *page.Size,
+		HasNextPage:     int64(offset+*page.Size) < count,
+		HasPreviousPage: *page.Number > 1,
+		TotalCount:      count,
+	}, nil
 }

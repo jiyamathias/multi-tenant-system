@@ -25,4 +25,6 @@ var (
 	ErrIDMissing = errors.New("id is missing")
 	// ErrCreatingAcctNumber for generating random account number
 	ErrCreatingAcctNumber = errors.New("error genarating account number")
+	// ErrTenantIDMissing for id missing
+	ErrTenantIDMissing = errors.New("tenant id is missing")
 )

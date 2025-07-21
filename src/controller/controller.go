@@ -44,6 +44,9 @@ type Operations interface {
 	UpdateTransactionByID(ctx context.Context, transaction model.Transaction) error
 
 	ProcessPaymentWebhook(ctx context.Context, payload model.PaymentWebhook) error
+
+	CreateTenant(ctx context.Context, tenant model.Tenant) (model.Tenant, error)
+	GetAllUsersByTenantID(ctx context.Context, tenantId uuid.UUID, page pagination.Page) ([]*model.User, pagination.PageInfo, error)
 }
 
 // Controller object to hold necessary reference to other dependencies
@@ -58,6 +61,7 @@ type Controller struct {
 	balanceStorage     storage.BalanceDatabase
 	walletStorage      storage.WalletDatabase
 	transactionStorage storage.TransactionDatabase
+	tenantStorage      storage.TenantDatabase
 
 	redis redis.KvStore
 	// third party services
@@ -75,6 +79,7 @@ func New(z zerolog.Logger, s *storage.Storage, m *middleware.Middleware) *Operat
 	balance := storage.NewBalance(s)
 	wallet := storage.NewWallet(s)
 	transaction := storage.NewTransaction(s)
+	tenant := storage.NewTenant(s)
 
 	newRedis := redis.NewRedis(s.Env, z, s.Env.Get("REDIS_SERVER_ADDRESS"))
 
@@ -88,6 +93,7 @@ func New(z zerolog.Logger, s *storage.Storage, m *middleware.Middleware) *Operat
 		balanceStorage:     *balance,
 		walletStorage:      *wallet,
 		transactionStorage: *transaction,
+		tenantStorage:      *tenant,
 
 		redis: *newRedis,
 	}

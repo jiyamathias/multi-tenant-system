@@ -11,6 +11,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"codematic/model"
 	"codematic/pkg/environment"
 	"codematic/pkg/gorm_sqlmock"
 	"codematic/pkg/helper"
@@ -85,4 +86,12 @@ func NewFromDB(db *gorm.DB) *Storage {
 func (s *Storage) Close() {
 	sqlDD, _ := s.DB.DB()
 	_ = sqlDD.Close()
+}
+
+func (s *Storage) AutoMigrate() error {
+	return s.DB.AutoMigrate(
+		model.AuditLog{}, model.Balance{},
+		model.Tenant{}, model.Transaction{},
+		model.User{}, model.Wallet{},
+	)
 }
